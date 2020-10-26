@@ -1,0 +1,123 @@
+<!--
+ * index.html: [Web client (JavaScript)]
+ *
+ * Supported WebSocket WebAPI: 2020-10-26 (tested; https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+ *
+ * Author: Nico Reski
+ * Web: https://reski.nicoversity.com
+ * Twitter: @nicoversity
+ * GitHub: https://github.com/nicoversity
+ * 
+ * ==================================================
+ *
+ * # Documentation
+ *
+ * Conceptual communication workflow:
+ * [Unity3D (websocket-sharp)] ---- [WebSocket server (Node.js, ws)] ---- [Web client (JavaScript)]
+ * 
+ * Server connection URLs:
+ * (Note: wss:// indicates the usage of "WebSocket Secure" as protocol, specifying that all traffic uses secure communication (HTTPS).)
+ * WebClient (JavScript):	wss://MY_SERVER_URL:MY_SERVER_PORT/
+ *
+ * For further information, please refer to the README.md file of this repository.
+-->
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Demo: JavaScript client to connect to a WebSocket server for communication with a Unity3D application.</title>
+</head>
+
+<body>
+	
+	<h2>Demo: JavaScript client to connect to a WebSocket server for communication with a Unity3D application.</h2>
+
+	<!-- Simple button to trigger data transfer of a message. -->
+	<h3>Send a WebSocket message to Unity3D.</h3>
+	<button type="button" onclick="sendDefaultMessageToUnity3DViaWebSocketServer()">Send message.</button>
+
+
+	<!-- Required scripting implementation. -->
+	<script type="text/javascript">
+	
+		// ===== WEBSOCKET MESSAGE API =====
+		//
+
+		// Define string variables for WebSocket event listeners.
+
+		// Unity3D (out) -> WebSocket server (inc/out) -> WebClient (inc)
+		var UNITYsendMessageToJAVASCRIPT = 'unity_to_js_message';
+
+		// WebClient (out) -> WebSocketServer (inc/out) -> Unity3D (inc)
+		var JAVASCRIPTsendMessageToUNITY = 'js_to_unity_message';
+
+
+		// ===== WEBSOCKET SETUP AND EVENT LISTERNERS =====
+		//
+
+		// create websocket instance
+		const socket = new WebSocket('wss://MY_SERVER_URL:MY_SERVER_PORT/');
+
+		// Event Handler: Open
+		socket.addEventListener('open', function (event) {
+			console.log("Connection established to WSS Server.");
+		});
+
+		// Event Handler: Message
+		socket.addEventListener('message', function (event) {
+
+			console.log("Message recevied with data: " + event.data);
+
+			// parse received message formatted in JSON, and create an object accordingly
+			var receivedJsonMessage = JSON.parse(event.data);
+
+            // access / use parsed JSON data
+            console.log(receivedJsonMessage);
+            console.log(receivedJsonMessage.sender);
+            console.log(receivedJsonMessage.receiver);
+            console.log(receivedJsonMessage.api);
+            console.log(receivedJsonMessage.valueString);
+            console.log(receivedJsonMessage.valueInt);
+            console.log(receivedJsonMessage.valueFloat);
+            console.log(receivedJsonMessage.valueBool);
+
+            // determine what to do next based on determined API field
+            switch (receivedJsonMessage.api)
+            {
+                case UNITYsendMessageToJAVASCRIPT:
+                	console.log("Message received from Unity client.");
+                    // do something
+                    break;
+
+                default:
+                    break;
+            }
+		});
+
+		// Compose and send default message from JavaScript to Unity3D via WebSocket server.
+		function sendDefaultMessageToUnity3DViaWebSocketServer()
+		{
+			// construct an example DefaultMessage (see properties in class WebSockerServerConnector.MessageJSONAPI.DefaultMessage in Unity3D source code)
+			var jsonDefaultMessage = { 'sender' : 'JavaScript client',
+									   'receiver' : 'Unity3D client',
+									   'api': JAVASCRIPTsendMessageToUNITY,
+									   'valueString' : 'An example string from JavaScript to Unity via Node.js',
+									   'valueInt' : 77,
+									   'valueFloat' : 42.23,
+									   'valueBool' : false };
+
+			// create JSON string based on message object's keys and values
+			var jsonString = JSON.stringify(jsonDefaultMessage);
+
+			// send string to WebSocket server
+			socket.send(jsonString);
+		}
+
+	</script>
+
+</body>
+
+</html>
