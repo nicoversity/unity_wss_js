@@ -23,6 +23,10 @@
  * Unity3D(websocket-sharp): wss://MY_SERVER_URL:MY_SERVER_PORT/
  *
  * For further information, please refer to the README.md file of this repository.
+ * 
+ * === VERSION HISTORY | FEATURE CHANGE LOG ===
+ * 2020-10-26: Original GitHub release.
+ * 2021-02-23: Added WebSocketReceivedMessageHandler helper class in order to further handle received messages via WebSocketServerConnector's WebSocket.OnMessage event, allowing for any desired (and Unity GameObject-related) actions in the application.
  */
 
 using System.Collections;
@@ -40,7 +44,7 @@ public class WebSocketServerConnector : MonoBehaviour {
     /// <summary>
     /// Internal class to define / collect classes representing individual JSON Message classes for a structured and logical communication with the WebSocket server.
     /// </summary>
-    protected class MessageJSONAPI
+    public class MessageJSONAPI
     {
         /// <summary>
         /// Class representing a default message for communication with the server (and other clients).
@@ -92,16 +96,19 @@ public class WebSocketServerConnector : MonoBehaviour {
     // configuration of the WebSocket server
     private static readonly string WEBSOCKET_SERVER_URL = "wss://MY_SERVER_URL:MY_SERVER_PORT/";
 
+    // reference to the WebSocketReceivedMessageHandler helper instance (see its documentation for further details)
+    public WebSocketReceivedMessageHandler webSocketReceivedMessageHandler;     // assigned via Unity Inspector
+
     #endregion
 
 
     #region WEBSOCKET_MESSAGE_API
 
     // Unity3D (out) -> WebSocket server (inc/out) -> WebClient (inc)
-    private const string UNITYsendMessageToJAVASCRIPT = "unity_to_js_defaultmessage";
+    public const string UNITYsendMessageToJAVASCRIPT = "unity_to_js_defaultmessage";
 
     // WebClient (out) -> WebSocketServer (inc/out) -> Unity3D (inc)
-    private const string JAVASCRIPTsendMessageToUNITY = "js_to_unity_defaultmessage";
+    public const string JAVASCRIPTsendMessageToUNITY = "js_to_unity_defaultmessage";
 
     #endregion
 
@@ -113,6 +120,9 @@ public class WebSocketServerConnector : MonoBehaviour {
     /// </summary>
     public void Awake()
     {
+        // check if helper instance is set up
+        if (webSocketReceivedMessageHandler == null) Debug.LogError("[WebSocketServerConnector] WebSocketReceivedMessageHandler is not assigned.");
+
         // instantiate new WebSocket object using the specified server url
         websocket = new WebSocket(WEBSOCKET_SERVER_URL);
 
@@ -167,6 +177,13 @@ public class WebSocketServerConnector : MonoBehaviour {
                         case JAVASCRIPTsendMessageToUNITY:
                             Debug.Log("Message received from JavaScript client.");
                             // do something
+
+                            // === update from 2021-02-23 ===
+                            // Generally, data structure manipulation is possible directly from within this event, but not Unity GameObject-related manipulations.
+                            // As a work-around, the WebSocketReceivedMessageHandler class was created (see its documentation for further information).
+
+                            // hand over received message to WebSocketReceivedMessageHandler, responsible for further handling of any desired (and Unity GameObject-related) actions in the application
+                            webSocketReceivedMessageHandler.queueDefaultMessage(receivedJsonMessage);
                             break;
 
                         default:

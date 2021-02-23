@@ -13,6 +13,7 @@ The purpose of this project is to provide a simple, minimalistic workflow / temp
 
 * Unity3D and JavaScript clients: connect to a WebSocket server, send / receive text data (`string`) formatted as JSON, stringify / parse JSON objects, access JSON fields
 * Node.js server: setup WebSocket Secure server, retrieve and forward / pass-through of text data (`string`) messages formatted as JSON to all connected clients (excl. original sender)
+* Unity3D: helper class to conveniently handle and further process received messages via WebSocket connection, allowing for any desired (and Unity GameObject-related) action
 * comprehensive documentation across all source files
 
 ## Dependencies
@@ -54,6 +55,7 @@ All source code can be found within the `unity_src` directory of this repository
 3. Open the `DEMO_WebSocketServerConnector.unity` scene in Unity3D.
 4. Edit `WEBSOCKET_SERVER_URL` in the `WebSocketServerConnector.cs` script.
 5. Run the application, and follow the example keyboard interaction: (1) Press `C` to open connection to the server; (2) Press `S` to send a default example message.
+6. *Optional*: For further handling of the default example message, refer to the implementation and documentation in the `WebSocketReceivedMessageHandler.cs` class.
 
 #### websocket-sharp Unity3D import
 
@@ -78,7 +80,13 @@ All source code can be found within the `js_src` directory of this repository. C
 
 Following, a list of known issues and some thoughts for further development:
 
-1. Extend the communication interface by implementing further event handlers.
+1. Unity GameObject-related manipulations are not possible directly from within the `WebSocket.OnMessage` event in the `WebSocketServerConnector.cs` class, resulting in a `WebSocket.OnError` event. For this purpose, the `WebSocketReceivedMessageHandler.cs` class has been implemented to provide a work-around accordingly.
+2. Extend the communication interface by implementing further event handlers.
+
+## Changelog
+### 2021-02-23
+
+ * Added `WebSocketReceivedMessageHandler.cs` helper class in order to further handle received messages via WebSocketServerConnector's WebSocket.OnMessage event, allowing for any desired (and Unity GameObject-related) actions in the application.
 
 ## License
 MIT License, see [LICENSE.md](LICENSE.md)
